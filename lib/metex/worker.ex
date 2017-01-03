@@ -4,7 +4,7 @@ defmodule Metex.Worker do
   @owm_url Application.get_env(:metex, :owm_url)
 
   def temperature_of(location) do
-    location |> url_for |> HTTPoison.get |> parse_response |> handle_result
+    location |> url_for |> HTTPoison.get |> parse_response |> handle_result(location)
   end
 
   defp url_for(location) do
@@ -30,4 +30,7 @@ defmodule Metex.Worker do
       _ -> :error
     end
   end
+
+  defp handle_result({:ok, temp}, location), do: "#{location}: #{temp}ªC"
+  defp handle_result(:error),                do: "#{location} not found"
 end
