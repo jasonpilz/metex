@@ -3,6 +3,33 @@ defmodule Metex.Worker do
   @owm_key Application.get_env(:metex, :owm_api_key)
   @owm_url Application.get_env(:metex, :owm_url)
 
+  @doc """
+  iex> cities = ["Singapore", "Monaco", "Vatican City", "Hong Kong", "Macau"]
+  iex> Metex.Worker.temperatures_of(cities)
+  """
+  def temperatures_of(cities) do
+    coordinator_pid = spawn(Metex.Coordinator, :loop, [[], Enum.count(cities)])
+
+    cities |> Enum.each(fn city ->
+      worker_pid = spawn(Metex.Worker, :loop, [])
+      send(worker_pid, {coordinator_pid, city})
+    end)
+  end
+
+  @doc """
+  iex> cities = ["Singapore", "Monaco", "Vatican City", "Hong Kong", "Macau"]
+  iex> cities |> Enum.each(&(spawn(Metex.Worker, :loop, []) |> send({self, &1})))
+  """
+  def loop do
+    receive do
+      {sender_pid, location} ->
+        send(sender_pid, {:ok, temperature_of(location)})
+      _ ->
+        IO.puts "Don't know how to process this message"
+    end
+    loop
+  end
+
   def temperature_of(location) do
     location |> url_for |> HTTPoison.get |> parse_response |> handle_result(location)
   end
