@@ -32,5 +32,5 @@ defmodule Metex.Worker do
   end
 
   defp handle_result({:ok, temp}, location), do: "#{location}: #{temp}ªC"
-  defp handle_result(:error),                do: "#{location} not found"
+  defp handle_result(:error, location),      do: "#{location} not found"
 end
